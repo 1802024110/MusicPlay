@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+  <meta https-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="//at.alicdn.com/t/font_3153956_a8ixubstjv4.css">
   <title>Document</title>
@@ -193,7 +194,7 @@
       init(playInfo) {
         this.audio.crossOrigin = 'anonymous';
         // 初始化歌曲播放链接
-        fetch('http://home.moegirl.love:1630/music/netease/song/redirect?id=1472480890').then(res => {
+        fetch(this.playList[0].url).then(res => {
           res.text().then(res2 => {
             this.audio.src = res2;
           })
