@@ -1,0 +1,88 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <style>
+    #post {
+      position: absolute;
+      top: 100px;
+      border: red solid 1px;
+      height: 300px;
+      width: 300px;
+    }
+  </style>
+  <input type="file" accept="video/*,audio/*" id="medio3">
+  <!-- svg展示波形，可忽略 -->
+  <div id='post'>
+    <svg width="100%" height="100%" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <script>
+    const ca = new (AudioContext || webkitAudioContext);
+    const input = document.getElementById('medio3');
+    input.addEventListener('change', function () {
+      input.files[0].arrayBuffer().then(function (buffer) {
+        ca.decodeAudioData(buffer).then(function (data) {
+          const source = ca.createBufferSource();
+          source.buffer = data;
+
+          const analyser = ca.createAnalyser();
+          // 创建一个音频分析器
+          analyser.fftSize = 512;
+
+          setInterval(() => {
+
+            let arr = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(arr)
+
+            arr = arr.slice(5, 170);
+            // 取arr里165个数据因为其最活跃
+            console.log(arr);
+            draw(arr);
+            // 往svg画画，不重要
+          }, 50);
+          source.connect(analyser);
+          // 流对象连接到分析器
+          analyser.connect(ca.destination);
+          // 分析器连接到输出设备
+          source.start();
+          // 播放
+        })
+      })
+    })
+
+    function draw(arr) {
+      /* 绘制音频图 */
+      const svg = document.querySelector('svg');
+      // 删除svg中的所有元素
+      svg.innerHTML = '';
+      // svg插入line
+      // 创建一个line
+      for (i = 1; i < arr.length; i++) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        // 获得id为post标签的宽度
+        const width = document.getElementById('post').offsetWidth;
+        console.log();
+        // x坐标为百分比屏幕宽除数组长度
+        line.setAttribute('x1', (i * (width / arr.length)));
+        line.setAttribute('y1', 255);
+        line.setAttribute('x2', i * (width / arr.length));
+        line.setAttribute('y2', arr[i]);
+        line.setAttribute('stroke', `rgb(${arr[i]},99,${arr[i]})`);
+        line.setAttribute('stroke-width', 1 + 'px');
+        svg.appendChild(line);
+      }
+      // 如果arr全为255，则清空svg
+      if (arr.every(item => item === 0)) {
+        svg.innerHTML = '';
+      }
+    }
+  </script>
+</body>
+
+</html>

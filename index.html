@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_3153956_a8ixubstjv4.css">
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+
+
+    .rotate {
+      animation: rotate360 20s linear infinite;
+    }
+
+    /* 360旋转动画 */
+    @-webkit-keyframes rotate360 {
+      from {
+        -webkit-transform: rotate(0deg);
+      }
+
+      to {
+        -webkit-transform: rotate(360deg);
+      }
+    }
+
+    .lrcs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .lrcs p {
+      font-size: 1rem;
+      color: rgb(216, 221, 225);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6rem;
+    }
+
+
+
+    .button {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      border: 0;
+      background-color: rgba(216, 221, 225, 0);
+    }
+
+    .button:active {
+      box-shadow: inset 0 0 0.1rem rgba(0, 0, 0, 0.5);
+    }
+
+    /*横条样式*/
+    .range {
+      -webkit-appearance: none;
+      /*清除系统默认样式*/
+      width: 100%;
+      border-radius: 10px;
+      background: -webkit-linear-gradient(rgb(144, 216, 216), rgb(144, 216, 216)) no-repeat, #ddd;
+      /*设置左边颜色为#61bd12，右边颜色为#ddd*/
+      background-size: 0% 100%;
+      /*设置左右宽度比例*/
+      height: 3px;
+      /*横条的高度*/
+    }
+
+    /*拖动块的样式*/
+    .range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      /*清除系统默认样式*/
+      height: 20px;
+      /*拖动块高度*/
+      width: 20px;
+      /*拖动块宽度*/
+      background: #fff;
+      /*拖动块背景*/
+      border-radius: 50%;
+      /*外观设置为圆形*/
+      border: solid 1px #ddd;
+      /*设置边框*/
+      transition: 0.30s;
+    }
+
+    .range::-webkit-slider-thumb:active {
+      width: 26px;
+      height: 26px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+
+<body style="background-color: black;height: 100vh;">
+  <div
+    style="background-color: rgb(255, 255, 255);width: 20rem;height: 40rem;border-radius: 20px;position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+    <!-- 头部开始 -->
+    <div
+      style="width: auto;height: 50px;display: flex;display: -webkit-flex;justify-content: space-between;align-items: center; padding: 10px;padding-top: 20px;">
+      <span class="iconfont icon-houtui" style="font-size: 30px;color: rgb(59, 69, 79);"></span>
+      <span id="songName" style="font-size: 25px;color: rgb(59, 69, 79);margin-top: -5px;">曲名</span>
+      <span class="iconfont icon-wangyiyunyinle" style="font-size: 28px;"></span>
+    </div>
+    <!-- 头部结束 -->
+    <!-- 中间唱片开始 -->
+    <div
+      style="width: auto;height: 300px;overflow: hidden;display: flex; justify-content: center; align-items: center;">
+      <canvas class="rotate" id="wrap"></canvas>
+      <img id='cover'
+        style="width: 150px;height: 150px;border-radius:50%;position: absolute;box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);"
+        alt="">
+
+    </div>
+    <!-- 中间唱片结束 -->
+    <!-- 歌词开始 -->
+    <div>
+      <div id="lrc" style="position: relative;text-align: center;height: 8rem;overflow:scroll" class=" lrcs">
+      </div>
+    </div>
+    <!-- 歌词结束 -->
+    <!-- 播放时间开始 -->
+    <div
+      style="display: flex;justify-content: space-between;margin-top: 1rem;color: rgb(206, 207, 209);font-size: 0.5rem;">
+      <div id="nowPlay" style="margin-left: 2rem;">00:00</div>
+      <div id="totalPlay" style="margin-right: 2rem;">Loding...</div>
+    </div>
+    <!-- 播放时间结束 -->
+    <!-- 播放进度开始 -->
+    <div
+      style="width: 80%;height: 0.2rem;border-radius: 10px;margin-left: auto;margin-right: auto;margin-bottom: 1rem;">
+      <input type="range" id="range" class="range" value="0">
+    </div>
+    <!-- 播放进度结束 -->
+    <!-- 功能按钮开始 -->
+    <div style="display: flex;justify-content: center;padding-top: 1rem;padding-bottom: 2rem;">
+      <div style="display: flex;justify-content: space-between;width: 60%;height: auto;">
+        <button id="prev" class="iconfont icon-shangyishou button"></button>
+        <button id="play" class="iconfont icon-bofang button" onclick="ms.playAction()"></button>
+        <button id="next" class="iconfont icon-xiayishou button"></button>
+      </div>
+    </div>
+  </div>
+  <script>
+    class MusicPlayer {
+      constructor(playInfo, playIndex, cover, canvas, songName, lrcs, range, nowPlay, totalPlay, play, prev, next) {
+        /* 
+        playInfo:歌曲信息，格式为
+        {
+          cover: 歌曲封面
+          lyric: 歌曲歌词
+          name: 歌曲名
+          tlyric: 歌曲歌词翻译(若无则参数为空)
+          url: 歌曲链接
+        }
+        playIndex: 歌曲索引
+        cover: 封面img的document对象
+        canvas: canvas标签的document对象
+        songName: 歌曲名的document对象
+        lrcs: 歌词的document对象
+        range: 拖动块的document对象
+        nowPlay: 当前播放时间的document对象
+        totalPlay: 总时间的document对象
+        play: 播放按钮的document对象
+        prev: 上一首按钮的document对象
+        next: 下一首按钮的document对象
+        */
+        this.playList = playInfo;
+        this.playIndex = playIndex;
+        this.cover = cover;
+        this.audio = document.createElement('audio')
+        this.canvas = canvas;
+        this.songName = songName;
+        this.lrcs = lrcs;
+        this.range = range;
+        this.nowPlay = nowPlay;
+        this.totalPlay = totalPlay;
+        this.play = play;
+        this.prev = prev;
+        this.next = next;
+        fetch(this.playList).then(res => res.json()).then(data => {
+          // 只接受一首歌曲，切换歌就切换this.playList
+
+          this.playList = data;
+          this.init(this.playList[playIndex]);
+        });
+
+      }
+
+      init(playInfo) {
+        this.audio.crossOrigin = 'anonymous';
+        // 初始化歌曲播放链接
+        fetch('http://home.moegirl.love:1630/music/netease/song/redirect?id=1472480890').then(res => {
+          res.text().then(res2 => {
+            this.audio.src = res2;
+          })
+        })
+        // this.audio.src = playInfo.url;
+        // 设置允许所有域名的歌
+        document.body.appendChild(this.audio);
+        // 获得canvas父标签宽度和高度
+        this.parentWidth = this.canvas.parentNode.offsetWidth;
+        this.parentHeight = this.canvas.parentNode.offsetHeight;
+        // 设置canvas宽高为父标签宽高
+        this.canvas.height = this.parentHeight;
+        this.canvas.width = this.parentWidth;
+        // 初始化Audio对象
+        this.ca = new (AudioContext || webkitAudioContext);
+        // 初始化音频分析器
+        this.analyser = this.ca.createAnalyser();
+        // 初始化音频T...什么来着
+        this.analyser.fftSize = 512;
+        // 设置音频分析器的音频数据的平滑度
+        this.analyser.smoothingTimeConstant = 0.9;
+        // 初始化音频源
+        this.source = this.ca.createMediaElementSource(this.audio);
+        // 连接音频源和音频分析器
+        this.source.connect(this.analyser);
+        // 连接音频分析器和扬声器
+        this.analyser.connect(this.ca.destination);
+        // 初始化封面
+
+        this.cover.src = playInfo.pic;
+        // 初始化歌曲名
+        this.songName.innerHTML = playInfo.title;
+        // 初始化歌词
+        this.initLrc(playInfo.lrc);
+        // 当音乐缓存完毕时,初始化操作
+        this.audio.addEventListener('canplay', () => {
+          // 初始化播放时间
+          const fen = Math.floor(this.audio.duration / 60);
+          const miao = Math.floor(this.audio.duration % 60);
+          this.totalPlay.innerHTML = `${fen}:${miao > 9 ? miao : '0' + miao}`;
+        });
+
+        // 当音乐开始播放时
+        this.audio.addEventListener('play', () => {
+          // 画频谱圈
+          setInterval(() => {
+            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+            this.analyser.getByteFrequencyData(this.dataArray);
+            this.dataArray = this.dataArray.slice(30, 150);
+            this.dataArray = this.dataArray.map(v => v / 1);
+            this.draw(this.dataArray)
+          }, 1);
+
+          // 更新图标
+          this.play.className = 'iconfont icon-zanting button';
+        });
+
+        // 开始监听进度条
+        this.range.addEventListener('input', () => {
+          // 更改滑块前的背景占比
+          this.range.style.backgroundSize = this.range.value + '% 100%';
+          // 同步播放时间
+          this.audio.currentTime = this.audio.duration * (this.range.value / 100);
+          this.playAction()
+          // 同步已播放时间
+          this.nowPlay.innerHTML = Math.floor(this.audio.currentTime / 60) + ':' + Math.floor(this.audio.currentTime % 60);
+        });
+      }
+
+      // 初始化歌词
+      initLrc(lrc) {
+        // 切割歌词
+        // 切割时间和内容
+        let lrcArr = lrc.split('[');
+        // 初始化存放歌词和时间的数组
+        let lrcObj = [];
+        // 循环切割的数组
+        lrcArr.forEach((item, index) => {
+          if (index !== 0) {
+            // 切割分秒和毫秒
+            let time = item.split(']')[0].split('.')
+            // 切割分和秒
+            let timeSec = time[0].split(':')
+            // 组合精确到毫秒的时间
+            timeSec = parseInt(timeSec[0]) * 60 + parseInt(timeSec[1]) + time[1] / 1000
+            // 切割歌词
+            let content = item.split(']')[1];
+            content = content.replace(/\n/g, '');
+            // 判断歌词是否为空
+            if (content == '') {
+              content = 'Music'
+            }
+            // 将时间和歌词存入数组
+            lrcObj.push({
+              timeSec,
+              content
+            })
+          }
+        })
+        lrcObj.forEach((item, index) => {
+          // 创建歌词元素
+          const elp = document.createElement('p');
+          // 设置歌词元素的内容
+          elp.innerHTML = item.content;
+          // 将elp的id设置为歌词时间来匹配歌词
+          elp.setAttribute('id', item.timeSec);
+          // 将歌词挂载到容器
+          this.lrcs.appendChild(elp);
+        })
+
+        // 匹配歌词
+        this.audio.ontimeupdate = () => {
+          // 获取当前播放时间
+          let currentTime = this.audio.currentTime;
+          // 循环歌词
+          for (let i = 0; i < lrcObj.length; i++) {
+            try {
+              // 判断歌词是否在当前播放时间内
+              if (currentTime >= lrcObj[i].timeSec && currentTime < lrcObj[i + 1].timeSec) {
+                // 设置当前歌词样式
+                this.lrcs.children[i].style.color = 'red';
+                this.lrcs.children[i].style.fontSize = '1.5rem';
+                // 这里控制歌词滚动
+                this.lrcs.scrollTop = this.lrcs.children[i].offsetTop - this.lrcs.children[i].offsetHeight * 2;
+                // 除去其他歌词颜色
+                for (let j = 0; j < this.lrcs.children.length; j++) {
+                  if (j != i) {
+                    this.lrcs.children[j].style.color = 'rgb(216, 221, 225)';
+                    this.lrcs.children[j].style.fontSize = '1rem';
+                  }
+                }
+              }
+            } catch (e) {
+              // 播放完毕
+            }
+          }
+
+          // 同步播放时间和滑轨
+          const fen = Math.floor(this.audio.currentTime / 60);
+          const miao = Math.floor(this.audio.currentTime % 60);
+          this.nowPlay.innerHTML = `${fen}:${miao > 9 ? miao : '0' + miao}`;
+          this.range.value = this.audio.currentTime / this.audio.duration * 100;
+          this.range.style.backgroundSize = this.range.value + '% 100%';
+        }
+      }
+
+      // 画音频圈
+      draw(output) {
+        // 初始化画布
+        this.ctx = this.canvas.getContext('2d');
+        // 获得画布的宽高
+        let width = this.canvas.width;
+        let height = this.canvas.height;
+        // 获得画布在屏幕上的坐标
+        let x = this.canvas.offsetLeft;
+        let y = this.canvas.offsetTop;
+        // 设置画笔的中心点
+        const potInt = { y: height / 2, x: y + width / 4 };
+        // 音谱圈的半径
+        const R = 100;
+        // 音谱圈线条的宽度
+        const W = 1;//宽
+        // 线条间隔的角度
+        const du = 360 / output.length;
+        // 清除画布，准备绘制
+        this.ctx.clearRect(0, 0, wrap.width, wrap.height);
+        //画线条
+        for (var i = 0; i < 180; i++) {
+          var value = output[i] / 10;//<===获取数据 
+          this.ctx.beginPath();
+          this.ctx.lineWidth = W;
+          const Rv1 = (R - value);
+          const Rv2 = (R + value);
+          this.ctx.moveTo((Math.sin((i * du) / 180 * Math.PI) * Rv1 + potInt.x), -Math.cos((i * du) / 180 * Math.PI) * Rv1 + potInt.y);
+          this.ctx.lineTo((Math.sin((i * du) / 180 * Math.PI) * Rv2 + potInt.x), -Math.cos((i * du) / 180 * Math.PI) * Rv2 + potInt.y);
+          this.ctx.stroke();
+        }
+      }
+
+      // 控制区域
+      control() {
+        // 播放按钮
+        this.play.onclick = () => {
+          // 判断是否播放
+          if (this.audio.paused) {
+
+            // 播放
+            this.audio.play();
+            // 改变按钮样式
+            this.play.className = 'iconfont icon-zanting button';
+          } else {
+            console.log('暂停123')
+            // 暂停
+            this.play.className = 'iconfont icon-bofang button';
+            this.audio.pause();
+            // 改变按钮样式
+          }
+        }
+        // 上一首,还不知道怎么写
+        this.prev.onclick = () => {
+          this.pause()
+          this.totalPlay.innerHTML = 'Loding...';
+          this.playIndex--;
+          this.initLrc(this.playList[this.playIndex].lrc);
+          this.cover.src = this.playList[this.playIndex].pic
+          fetch(this.playList[this.playIndex].url).then(res => {
+            res.text().then(res2 => {
+              this.audio.src = res2;
+              // 当audio缓存完毕后执行
+              this.audio.oncanplay = () => {
+                this.audio.play();
+                this.songName.innerHTML = this.playList[this.playIndex].title
+                this.play.className = 'iconfont icon-bofang button';
+                this.range.style.backgroundSize = '0% 100%';
+              }
+            })
+          })
+          this.nowPlay.innerHTML = this.playList[this.playIndex].name;
+        }
+        // 下一首,还不知道怎么写,暂时不写,后面再说
+        this.next.onclick = () => {
+          if (this.playIndex != this.playList.length - 1) {
+            this.pause()
+            this.totalPlay.innerHTML = 'Loding...';
+            this.playIndex++;
+            this.initLrc(this.playList[this.playIndex].lrc);
+            this.cover.src = this.playList[this.playIndex].pic
+            fetch(this.playList[this.playIndex].url).then(res => {
+              res.text().then(res2 => {
+                this.audio.src = res2;
+                // 当audio缓存完毕后执行
+                this.audio.oncanplay = () => {
+                  this.audio.play();
+                  this.songName.innerHTML = this.playList[this.playIndex].title
+                  this.play.className = 'iconfont icon-bofang button';
+                  this.range.style.backgroundSize = '0% 100%';
+                }
+              })
+            })
+            this.nowPlay.innerHTML = this.playList[this.playIndex].name;
+          }
+        }
+      }
+      playAction() {
+        this.audio.play();
+      }
+      pause() {
+        this.audio.pause();
+      }
+    }
+
+    const ms = new MusicPlayer(
+      'https://cdn.jsdelivr.net/gh/1802024110/GitHub_Oss@main/Lyrics/playList1.json',
+      0,
+      document.getElementById('cover'),
+      document.getElementById('wrap'),
+      document.getElementById('songName'),
+      document.getElementById('lrc'),
+      document.getElementById('range'),
+      document.getElementById('nowPlay'),
+      document.getElementById('totalPlay'),
+      document.getElementById('play'),
+      document.getElementById('prev'),
+      document.getElementById('next'),
+    );
+    ms.control()
+  </script>
+  <style>
+    .icon-bofang {
+      font-size: 2rem;
+      color: rgb(144, 216, 216);
+    }
+
+    .icon-xiayishou,
+    .icon-shangyishou {
+      color: #caccdb;
+    }
+  </style>
+</body>
+
+</html>

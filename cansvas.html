@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <input type="file" accept="video/*,audio/*" id="medio3">
+  <canvas id="wrap" height="800" width="800"></canvas>
+  <script>
+
+    const ca = new (AudioContext || webkitAudioContext);
+    const input = document.getElementById('medio3');
+    input.addEventListener('change', function () {
+      input.files[0].arrayBuffer().then(function (buffer) {
+        ca.decodeAudioData(buffer).then(function (data) {
+          const source = ca.createBufferSource();
+          source.buffer = data;
+
+          const analyser = ca.createAnalyser();
+          // 创建一个音频分析器
+          analyser.smoothingTimeConstant = 0.3
+          // 数据平滑系数 
+          analyser.fftSize = 512;
+          setInterval(() => {
+            let arr = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(arr)
+            arr = arr.slice(5, 140);
+            // arr每个值缩小2倍
+            arr = arr.map(v => v / 3);
+            draw(arr)
+          }, 50);
+          source.connect(analyser);
+          // 流对象连接到分析器
+          analyser.connect(ca.destination);
+          // 分析器连接到输出设备
+          source.start();
+          // 播放
+        })
+      })
+    })
+
+    function draw(output) {
+      const potInt = { x: 300, y: 300 };//起始坐标
+      const R = 200;//半径
+      const W = 4;//宽
+      // 每个线条之间的角度间隔
+      const du = 360 / output.length; //角度
+      var cxt = wrap.getContext("2d");
+      cxt.clearRect(0, 0, wrap.width, wrap.height);
+      //画线条
+      for (var i = 0; i < 180; i++) {
+        var value = output[i] / 10;//<===获取数据 
+        cxt.beginPath();
+        cxt.lineWidth = W;
+        Rv1 = (R - value);
+        Rv2 = (R + value);
+        cxt.moveTo((Math.sin((i * du) / 180 * Math.PI) * Rv1 + potInt.y), -Math.cos((i * du) / 180 * Math.PI) * Rv1 + potInt.x);
+        cxt.lineTo((Math.sin((i * du) / 180 * Math.PI) * Rv2 + potInt.y), -Math.cos((i * du) / 180 * Math.PI) * Rv2 + potInt.x);
+        cxt.stroke();
+      }
+
+    }
+  </script>
+</body>
+
+</html>

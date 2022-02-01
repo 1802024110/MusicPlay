@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <style>
+    #lrcBox {
+      display: grid;
+      height: 50px;
+      width: 100%;
+      align-items: center;
+    }
+
+    #lrcBox p {
+      text-align: center;
+    }
+
+    #lrc1 {
+      color: rgb(0, 0, 0);
+    }
+
+    #lrc2,
+    #lrc3 {
+      color: rgb(161, 161, 161);
+    }
+  </style>
+  <audio id='aduio' controls></audio>
+  <div id="lrcBox">
+    <p id='lrc3'></p>
+    <p id='lrc1'></p>
+    <p id='lrc2'></p>
+  </div>
+  <script>
+    const audio = document.getElementById('aduio');
+    const music = 'https://cdn.jsdelivr.net/gh/1802024110/GitHub_Oss@main/Lyrics/playList1.json'
+    fetch(music).then(res => res.json()).then(res => {
+      audio.src = res[0].url;
+      splitLrc(music).then(res => {
+        let lrcDom1 = document.getElementById('lrc1');
+        let lrcDom2 = document.getElementById('lrc2');
+        let lrcDom3 = document.getElementById('lrc3');
+        // 匹配audio的时间显示歌词
+        audio.ontimeupdate = function () {
+          let currentTime = this.currentTime
+          // currentTime取小数点后两位
+          currentTime = currentTime.toFixed(3) * 1;
+          // 匹配歌词
+          for (let i = 0; i < res.length; i++) {
+            if (currentTime >= res[i].timeSec && currentTime < res[i + 1].timeSec) {
+              lrcDom1.innerHTML = res[i].content;
+              lrcDom2.innerHTML = res[i + 1].content;
+              lrcDom3.innerHTML = res[i - 1].content;
+            }
+          }
+
+        }
+      });
+    });
+    async function splitLrc(lrc, index = 0) {//把lrc歌词分割成数组，
+      return await fetch(lrc).then(res => res.json()).then(res => {
+        res = res[index]
+        let lrc = ''
+        if (res.tlyric) {
+          lrc = res.tlyric
+        } else {
+          lrc = res.lyric
+        }
+        lrc = res.lyric
+        let lrcArr = lrc.split('[');
+        let lrcObj = [];
+        lrcArr.forEach((item, index) => {
+          if (index !== 0) {
+            let time = item.split(']')[0].split('.')
+            timeSec = time[0].split(':')
+            timeSec = parseInt(timeSec[0]) * 60 + parseInt(timeSec[1]) + time[1] / 1000
+            let content = item.split(']')[1];
+            if (content == '') {
+              content = '...'
+            }
+            lrcObj.push({
+              timeSec,
+              content
+            })
+          }
+        })
+        return lrcObj;
+      })
+    }
+
+  </script>
+</body>
+
+</html>

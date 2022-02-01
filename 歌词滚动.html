@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <style>
+    #lrc {
+      position: relative;
+      top: 200;
+      width: auto;
+      height: 100px;
+      overflow: scroll;
+    }
+
+    #lrc li {
+      font-size: 12px;
+      color: aquamarine;
+    }
+  </style>
+  <audio id='aduio' controls></audio>
+  <div id="lrcBox">
+    <div id="lrc" style="height: 200px;"></div>
+  </div>
+  <script>
+    const audio = document.getElementById('aduio');
+    const music = 'https://cdn.jsdelivr.net/gh/1802024110/GitHub_Oss@main/Lyrics/playList1.json'
+    fetch(music).then(res => res.json()).then(res => {
+      audio.src = res[0].url;
+      splitLrc(music).then(res => {
+        let lrcDom = document.getElementById('lrc');
+        res.forEach(item => {
+          let li = document.createElement('p');
+          li.innerText = item.content + '\n';
+          li.setAttribute('id', item.timeSec);
+          lrcDom.appendChild(li);
+        })
+        // 匹配audio的时间显示歌词
+        audio.ontimeupdate = function () {
+          let currentTime = this.currentTime
+          // 匹配歌词
+          for (let i = 0; i < res.length; i++) {
+            if (currentTime >= res[i].timeSec && currentTime < res[i + 1].timeSec) {
+              lrcDom.children[i].style.color = 'red';
+              // 这里控制歌词滚动
+              lrcDom.scrollTop = lrcDom.children[i].offsetTop - lrcDom.children[i].offsetHeight * 2;
+              // 除去其他歌词颜色
+              for (let j = 0; j < lrcDom.children.length; j++) {
+                if (j != i) {
+                  lrcDom.children[j].style.color = 'aquamarine';
+                }
+              }
+            }
+          }
+          // 播放间隔1秒清除颜色
+        }
+      });
+    });
+    async function splitLrc(lrc, index = 0) {//把lrc歌词分割成数组，
+      return await fetch(lrc).then(res => res.json()).then(res => {
+        res = res[index]
+        let lrc = ''
+        if (res.tlyric) {
+          lrc = res.tlyric
+        } else {
+          lrc = res.lyric
+        }
+        // lrc = res.lyric
+        let lrcArr = lrc.split('[');
+        let lrcObj = [];
+        lrcArr.forEach((item, index) => {
+          if (index !== 0) {
+            let time = item.split(']')[0].split('.')
+            timeSec = time[0].split(':')
+            timeSec = parseInt(timeSec[0]) * 60 + parseInt(timeSec[1]) + time[1] / 1000
+            let content = item.split(']')[1];
+            if (content == '') {
+              content = 'Music'
+            }
+            lrcObj.push({
+              timeSec,
+              content
+            })
+          }
+        })
+        return lrcObj;
+      })
+    }
+
+  </script>
+</body>
+
+</html>
