@@ -33,7 +33,7 @@
     }
 
     .lrcs p {
-      font-size: 1rem;
+      font-size: 0.5rem;
       color: rgb(216, 221, 225);
       margin: 0;
       padding: 0;
@@ -290,14 +290,14 @@
               if (currentTime >= lrcObj[i].timeSec && currentTime < lrcObj[i + 1].timeSec) {
                 // 设置当前歌词样式
                 this.lrcs.children[i].style.color = 'red';
-                this.lrcs.children[i].style.fontSize = '1.5rem';
+                this.lrcs.children[i].style.fontSize = '1rem';
                 // 这里控制歌词滚动
                 this.lrcs.scrollTop = this.lrcs.children[i].offsetTop - this.lrcs.children[i].offsetHeight * 2;
                 // 除去其他歌词颜色
                 for (let j = 0; j < this.lrcs.children.length; j++) {
                   if (j != i) {
                     this.lrcs.children[j].style.color = 'rgb(216, 221, 225)';
-                    this.lrcs.children[j].style.fontSize = '1rem';
+                    this.lrcs.children[j].style.fontSize = '0.5rem';
                   }
                 }
               }
@@ -402,6 +402,7 @@
           // 如果className包含icon-shunxu
           if (this.sort.className.indexOf('icon-shunxu') != -1) {
             // 随机播放代码
+            this.audio.loop = false
             this.playList.sort(() => {
               return Math.random() - 0.5;
             })
@@ -412,6 +413,7 @@
             this.sort.className = 'iconfont icon-xunhuanjianting button';
           } else if (this.sort.className.indexOf('icon-xunhuanjianting') != -1) {
             // 顺序代码
+            this.audio.loop = false
             fetch(this.playInfo).then(res => res.json()).then(data => {
               this.playList = data;
             });
