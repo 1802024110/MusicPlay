@@ -13,9 +13,7 @@
       padding: 0;
     }
 
-
-
-    .rotate {
+    .cover {
       animation: rotate360 20s linear infinite;
     }
 
@@ -144,9 +142,10 @@
       </div>
     </div>
   </div>
+  <audio id="audio1"></audio>
   <script>
     class MusicPlayer {
-      constructor(playInfo, playIndex, cover, canvas, songName, lrcs, range, nowPlay, totalPlay, play, prev, next) {
+      constructor(playInfo, playIndex, cover, songName, lrcs, range, nowPlay, totalPlay, play, prev, next) {
         /* 
         playInfo:歌曲信息，格式为
         {
@@ -158,7 +157,6 @@
         }
         playIndex: 歌曲索引
         cover: 封面img的document对象
-        canvas: canvas标签的document对象
         songName: 歌曲名的document对象
         lrcs: 歌词的document对象
         range: 拖动块的document对象
@@ -170,9 +168,8 @@
         */
         this.playList = playInfo;
         this.playIndex = playIndex;
+        this.audio = document.getElementById('audio1');
         this.cover = cover;
-        this.audio = document.createElement('audio')
-        this.canvas = canvas;
         this.songName = songName;
         this.lrcs = lrcs;
         this.range = range;
@@ -191,34 +188,10 @@
       }
 
       init(playInfo) {
-        // this.audio.crossOrigin = 'anonymous';
+        // this.audio.crossOrigin = "anonymous"
         // 初始化歌曲播放链接
-        this.audio.src = 'http://music.163.com/song/media/outer/url?id=' + playInfo.songid + '.mp3';
-        // this.audio.src = playInfo.url;
-        // 设置允许所有域名的歌
-        document.body.appendChild(this.audio);
-        // 获得canvas父标签宽度和高度
-        this.parentWidth = this.canvas.parentNode.offsetWidth;
-        this.parentHeight = this.canvas.parentNode.offsetHeight;
-        // 设置canvas宽高为父标签宽高
-        this.canvas.height = this.parentHeight;
-        this.canvas.width = this.parentWidth;
-        // 初始化Audio对象
-        this.ca = new (AudioContext || webkitAudioContext);
-        // 初始化音频分析器
-        this.analyser = this.ca.createAnalyser();
-        // 初始化音频T...什么来着
-        this.analyser.fftSize = 512;
-        // 设置音频分析器的音频数据的平滑度
-        this.analyser.smoothingTimeConstant = 0.9;
-        // 初始化音频源
-        this.source = this.ca.createMediaElementSource(this.audio);
-        // 连接音频源和音频分析器
-        this.source.connect(this.analyser);
-        // 连接音频分析器和扬声器
-        this.analyser.connect(this.ca.destination);
+        this.audio.src = 'https://music.163.com/song/media/outer/url?id=' + playInfo.songid + '.mp3';
         // 初始化封面
-
         this.cover.src = playInfo.pic;
         // 初始化歌曲名
         this.songName.innerHTML = playInfo.title;
@@ -234,15 +207,8 @@
 
         // 当音乐开始播放时
         this.audio.addEventListener('play', () => {
-          // 画频谱圈
-          setInterval(() => {
-            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-            this.analyser.getByteFrequencyData(this.dataArray);
-            this.dataArray = this.dataArray.slice(30, 150);
-            this.dataArray = this.dataArray.map(v => v / 1);
-            this.draw(this.dataArray)
-          }, 1);
-
+          // 封面开始旋转
+          this.cover.style.animation = 'rotate360 20s linear infinite'
           // 更新图标
           this.play.className = 'iconfont icon-zanting button';
         });
@@ -336,39 +302,6 @@
         }
       }
 
-      // 画音频圈
-      draw(output) {
-        // 初始化画布
-        this.ctx = this.canvas.getContext('2d');
-        // 获得画布的宽高
-        let width = this.canvas.width;
-        let height = this.canvas.height;
-        // 获得画布在屏幕上的坐标
-        let x = this.canvas.offsetLeft;
-        let y = this.canvas.offsetTop;
-        // 设置画笔的中心点
-        const potInt = { y: height / 2, x: y + width / 4 };
-        // 音谱圈的半径
-        const R = 100;
-        // 音谱圈线条的宽度
-        const W = 1;//宽
-        // 线条间隔的角度
-        const du = 360 / output.length;
-        // 清除画布，准备绘制
-        this.ctx.clearRect(0, 0, wrap.width, wrap.height);
-        //画线条
-        for (var i = 0; i < 180; i++) {
-          var value = output[i] / 10;//<===获取数据 
-          this.ctx.beginPath();
-          this.ctx.lineWidth = W;
-          const Rv1 = (R - value);
-          const Rv2 = (R + value);
-          this.ctx.moveTo((Math.sin((i * du) / 180 * Math.PI) * Rv1 + potInt.x), -Math.cos((i * du) / 180 * Math.PI) * Rv1 + potInt.y);
-          this.ctx.lineTo((Math.sin((i * du) / 180 * Math.PI) * Rv2 + potInt.x), -Math.cos((i * du) / 180 * Math.PI) * Rv2 + potInt.y);
-          this.ctx.stroke();
-        }
-      }
-
       // 控制区域
       control() {
         // 播放按钮
@@ -437,7 +370,6 @@
       'https://cdn.jsdelivr.net/gh/1802024110/GitHub_Oss@main/Lyrics/playList1.json',
       0,
       document.getElementById('cover'),
-      document.getElementById('wrap'),
       document.getElementById('songName'),
       document.getElementById('lrc'),
       document.getElementById('range'),
