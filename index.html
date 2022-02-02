@@ -191,13 +191,9 @@
       }
 
       init(playInfo) {
-        this.audio.crossOrigin = 'anonymous';
+        // this.audio.crossOrigin = 'anonymous';
         // 初始化歌曲播放链接
-        fetch(this.playList[0].url).then(res => {
-          res.text().then(res2 => {
-            this.audio.src = res2;
-          })
-        })
+        this.audio.src = 'http://music.163.com/song/media/outer/url?id=' + playInfo.songid + '.mp3';
         // this.audio.src = playInfo.url;
         // 设置允许所有域名的歌
         document.body.appendChild(this.audio);
@@ -399,18 +395,14 @@
           this.playIndex--;
           this.initLrc(this.playList[this.playIndex].lrc);
           this.cover.src = this.playList[this.playIndex].pic
-          fetch(this.playList[this.playIndex].url).then(res => {
-            res.text().then(res2 => {
-              this.audio.src = res2;
-              // 当audio缓存完毕后执行
-              this.audio.oncanplay = () => {
-                this.audio.play();
-                this.songName.innerHTML = this.playList[this.playIndex].title
-                this.play.className = 'iconfont icon-bofang button';
-                this.range.style.backgroundSize = '0% 100%';
-              }
-            })
-          })
+          this.audio.src = 'http://music.163.com/song/media/outer/url?id=' + this.playList[this.playIndex].songid + '.mp3';
+          // 当audio缓存完毕后执行
+          this.audio.oncanplay = () => {
+            this.audio.play();
+            this.songName.innerHTML = this.playList[this.playIndex].title
+            this.play.className = 'iconfont icon-bofang button';
+            this.range.style.backgroundSize = '0% 100%';
+          }
           this.nowPlay.innerHTML = this.playList[this.playIndex].name;
         }
         // 下一首,还不知道怎么写,暂时不写,后面再说
@@ -421,18 +413,14 @@
             this.playIndex++;
             this.initLrc(this.playList[this.playIndex].lrc);
             this.cover.src = this.playList[this.playIndex].pic
-            fetch(this.playList[this.playIndex].url).then(res => {
-              res.text().then(res2 => {
-                this.audio.src = res2;
-                // 当audio缓存完毕后执行
-                this.audio.oncanplay = () => {
-                  this.audio.play();
-                  this.songName.innerHTML = this.playList[this.playIndex].title
-                  this.play.className = 'iconfont icon-bofang button';
-                  this.range.style.backgroundSize = '0% 100%';
-                }
-              })
-            })
+            this.audio.src = 'http://music.163.com/song/media/outer/url?id=' + this.playList[this.playIndex].songid + '.mp3';
+            // 当audio缓存完毕后执行
+            this.audio.oncanplay = () => {
+              this.audio.play();
+              this.songName.innerHTML = this.playList[this.playIndex].title
+              this.play.className = 'iconfont icon-bofang button';
+              this.range.style.backgroundSize = '0% 100%';
+            }
             this.nowPlay.innerHTML = this.playList[this.playIndex].name;
           }
         }
