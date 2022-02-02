@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="//at.alicdn.com/t/font_3153956_a8ixubstjv4.css">
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_3167935_apqfmaujfa9.css">
   <title>Document</title>
   <style>
     * {
@@ -101,7 +101,8 @@
       style="width: auto;height: 50px;display: flex;display: -webkit-flex;justify-content: space-between;align-items: center; padding: 10px;padding-top: 20px;">
       <span class="iconfont icon-houtui" style="font-size: 30px;color: rgb(59, 69, 79);"></span>
       <span id="songName" style="font-size: 25px;color: rgb(59, 69, 79);margin-top: -5px;">曲名</span>
-      <span class="iconfont icon-wangyiyunyinle" style="font-size: 28px;"></span>
+      <span class="iconfont icon-wangyiyunyinle" style="font-size: 28px;"
+        onclick="top.location=ms.playList[ms.playIndex].link"></span>
     </div>
     <!-- 头部结束 -->
     <!-- 中间唱片开始 -->
@@ -118,6 +119,8 @@
     <div>
       <div id="lrc" style="position: relative;text-align: center;height: 8rem;overflow:scroll" class=" lrcs">
       </div>
+      <button id="translation" class="iconfont icon-Translate button"
+        style="width: 00.8rem;height: 00.8rem;display: flex;float: right;right: 1rem;position: relative;"></button>
     </div>
     <!-- 歌词结束 -->
     <!-- 播放时间开始 -->
@@ -134,18 +137,20 @@
     </div>
     <!-- 播放进度结束 -->
     <!-- 功能按钮开始 -->
-    <div style="display: flex;justify-content: center;padding-top: 1rem;padding-bottom: 2rem;">
+    <div style="display: flex;justify-content: center;padding-top: 1rem;padding-bottom: 2rem;position: relative;">
+      <button id="sort" class="iconfont icon-shunxu button"></button>
       <div style="display: flex;justify-content: space-between;width: 60%;height: auto;">
         <button id="prev" class="iconfont icon-shangyishou button"></button>
-        <button id="play" class="iconfont icon-bofang button" onclick="ms.playAction()"></button>
+        <button id="play" class="iconfont icon-bofang button"></button>
         <button id="next" class="iconfont icon-xiayishou button"></button>
       </div>
+      <button id="list" class="iconfont icon-liebiao button" style=""></button>
     </div>
   </div>
   <audio id="audio1"></audio>
   <script>
     class MusicPlayer {
-      constructor(playInfo, playIndex, cover, songName, lrcs, range, nowPlay, totalPlay, play, prev, next) {
+      constructor(playInfo, playIndex, cover, songName, lrcs, range, nowPlay, totalPlay, play, prev, next, translation, sort, list) {
         /* 
         playInfo:歌曲信息，格式为
         {
@@ -166,7 +171,8 @@
         prev: 上一首按钮的document对象
         next: 下一首按钮的document对象
         */
-        this.playList = playInfo;
+        this.playInfo = playInfo;
+        this.playList = this.playInfo;
         this.playIndex = playIndex;
         this.audio = document.getElementById('audio1');
         this.cover = cover;
@@ -178,13 +184,14 @@
         this.play = play;
         this.prev = prev;
         this.next = next;
+        this.translation = translation;
+        this.sort = sort;
+        this.list = list;
         fetch(this.playList).then(res => res.json()).then(data => {
           // 只接受一首歌曲，切换歌就切换this.playList
-
           this.playList = data;
           this.init(this.playList[playIndex]);
         });
-
       }
 
       init(playInfo) {
@@ -223,11 +230,17 @@
           // 同步已播放时间
           this.nowPlay.innerHTML = Math.floor(this.audio.currentTime / 60) + ':' + Math.floor(this.audio.currentTime % 60);
         });
+
+        // 调用音乐控制器
+        this.control()
       }
 
       // 初始化歌词
       initLrc(lrc) {
-        // 切割歌词
+        // 删除容器中的所有元素
+        while (this.lrcs.firstChild) {
+          this.lrcs.removeChild(this.lrcs.firstChild);
+        }
         // 切割时间和内容
         let lrcArr = lrc.split('[');
         // 初始化存放歌词和时间的数组
@@ -304,6 +317,11 @@
 
       // 控制区域
       control() {
+        // 播放完自动播放下一首
+        this.audio.onended = () => {
+          this.next.click();
+        }
+
         // 播放按钮
         this.play.onclick = () => {
           // 判断是否播放
@@ -321,24 +339,25 @@
             // 改变按钮样式
           }
         }
-        // 上一首,还不知道怎么写
+        // 上一首
         this.prev.onclick = () => {
-          this.pause()
-          this.totalPlay.innerHTML = 'Loding...';
-          this.playIndex--;
-          this.initLrc(this.playList[this.playIndex].lrc);
-          this.cover.src = this.playList[this.playIndex].pic
-          this.audio.src = 'http://music.163.com/song/media/outer/url?id=' + this.playList[this.playIndex].songid + '.mp3';
-          // 当audio缓存完毕后执行
-          this.audio.oncanplay = () => {
-            this.audio.play();
-            this.songName.innerHTML = this.playList[this.playIndex].title
-            this.play.className = 'iconfont icon-bofang button';
-            this.range.style.backgroundSize = '0% 100%';
+          if (this.playIndex > 0) {
+            this.pause()
+            this.totalPlay.innerHTML = 'Loding...';
+            this.playIndex--;
+            this.initLrc(this.playList[this.playIndex].lrc);
+            this.cover.src = this.playList[this.playIndex].pic
+            this.audio.src = 'http://music.163.com/song/media/outer/url?id=' + this.playList[this.playIndex].songid + '.mp3';
+            // 当audio缓存完毕后执行
+            this.audio.oncanplay = () => {
+              this.audio.play();
+              this.songName.innerHTML = this.playList[this.playIndex].title
+              this.range.style.backgroundSize = '0% 100%';
+            }
+            this.nowPlay.innerHTML = this.playList[this.playIndex].name;
           }
-          this.nowPlay.innerHTML = this.playList[this.playIndex].name;
         }
-        // 下一首,还不知道怎么写,暂时不写,后面再说
+        // 下一首
         this.next.onclick = () => {
           if (this.playIndex != this.playList.length - 1) {
             this.pause()
@@ -351,10 +370,52 @@
             this.audio.oncanplay = () => {
               this.audio.play();
               this.songName.innerHTML = this.playList[this.playIndex].title
-              this.play.className = 'iconfont icon-bofang button';
               this.range.style.backgroundSize = '0% 100%';
             }
             this.nowPlay.innerHTML = this.playList[this.playIndex].name;
+          }
+        }
+
+        // 翻译
+        let count = 0;
+        this.translation.onclick = () => {
+          if (count === 0) {
+            this.initLrc(this.playList[this.playIndex].tlrc);
+            count = 1;
+            console.log(count);
+          }
+          else {
+            this.initLrc(this.playList[this.playIndex].lrc);
+            count = 0;
+          }
+        }
+        this.audio.addEventListener('canplay', () => {
+          if (this.playList[this.playIndex].tlrc) {
+            this.translation.style.display = 'block';
+          } else {
+            this.translation.style.display = 'none';
+          }
+        })
+
+        // 播放顺序
+        this.sort.onclick = () => {
+          // 如果className包含icon-shunxu
+          if (this.sort.className.indexOf('icon-shunxu') != -1) {
+            // 随机播放代码
+            this.playList.sort(() => {
+              return Math.random() - 0.5;
+            })
+            this.sort.className = 'iconfont icon-suijibofang button';
+          } else if (this.sort.className.indexOf('icon-suijibofang') != -1) {
+            // 循环代码
+            this.audio.loop = true;
+            this.sort.className = 'iconfont icon-xunhuanjianting button';
+          } else if (this.sort.className.indexOf('icon-xunhuanjianting') != -1) {
+            // 顺序代码
+            fetch(this.playInfo).then(res => res.json()).then(data => {
+              this.playList = data;
+            });
+            this.sort.className = 'iconfont icon-shunxu button';
           }
         }
       }
@@ -378,8 +439,10 @@
       document.getElementById('play'),
       document.getElementById('prev'),
       document.getElementById('next'),
+      document.getElementById('translation'),
+      document.getElementById('sort'),
+      document.getElementById('list'),
     );
-    ms.control()
   </script>
   <style>
     .icon-bofang {
@@ -389,7 +452,15 @@
 
     .icon-xiayishou,
     .icon-shangyishou {
+      font-size: 1rem;
       color: #caccdb;
+    }
+
+    .icon-shunxu {
+      font-size: 2.4rem;
+      position: relative;
+      bottom: -0.1rem;
+      vertical-align: bottom;
     }
   </style>
 </body>
