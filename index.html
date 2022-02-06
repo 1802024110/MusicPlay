@@ -526,6 +526,9 @@
               }
             }
             const elDivButton2 = document.createElement('button');
+            elDivButton2.onclick = () => {
+              top.location.href = this.playList[i].link;
+            }
             switch (this.playList[i].type) {
               case 'netease':
                 elDivButton2.className = 'iconfont icon-wangyiyunyinle button';
