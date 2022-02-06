@@ -171,7 +171,6 @@
     <!-- 中间唱片开始 -->
     <div
       style="width: auto;height: 300px;overflow: hidden;display: flex; justify-content: center; align-items: center;">
-      <canvas class="rotate" id="wrap"></canvas>
       <img id='cover'
         style="width: 150px;height: 150px;border-radius:50%;position: absolute;box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);"
         alt="">
@@ -182,6 +181,8 @@
     <div>
       <div id="lrc" style="position: relative;text-align: center;height: 8rem;overflow:scroll" class=" lrcs">
       </div>
+      <button id="mv" class="iconfont icon-mv button button"
+        style="width: 00.8rem;height: 00.8rem;display: flex;float: left;left: 1rem;position: relative;"></button>
       <button id="translation" class="iconfont icon-Translate button"
         style="width: 00.8rem;height: 00.8rem;display: flex;float: right;right: 1rem;position: relative;"></button>
     </div>
@@ -214,7 +215,7 @@
   <audio id="audio1"></audio>
   <script>
     class MusicPlayer {
-      constructor(playInfo, playIndex, cover, songName, lrcs, range, nowPlay, totalPlay, play, prev, next, translation, sort, list, listOverlay, close, music_list, music_count, video) {
+      constructor(playInfo, playIndex, cover, songName, lrcs, range, nowPlay, totalPlay, play, prev, next, translation, mv, sort, list, listOverlay, close, music_list, music_count, video) {
         /* 
         playInfo:歌曲信息，格式为
         {
@@ -235,6 +236,7 @@
         prev: 上一首按钮的document对象
         next: 下一首按钮的document对象
         translation: 翻译按钮的document对象
+        mv: 翻译旁边的mv按钮的document对象
         sort: 排序按钮的document对象  
         list: 歌曲列表按钮的document对象
         listOverlay: 歌曲列表的document对象
@@ -257,6 +259,7 @@
         this.prev = prev;
         this.next = next;
         this.translation = translation;
+        this.mv = mv;
         this.sort = sort;
         this.list = list;
         this.listOverlay = listOverlay;
@@ -453,7 +456,7 @@
           }
         }
 
-        // 翻译
+        // 翻译和mv
         let count = 0;
         this.translation.onclick = () => {
           if (count === 0) {
@@ -472,7 +475,20 @@
           } else {
             this.translation.style.display = 'none';
           }
+          if (this.playList[this.playIndex].mv) {
+            this.mv.style.display = 'block';
+          } else {
+            this.mv.style.display = 'none';
+          }
         })
+        // mv
+        this.mv.onclick = () => {
+          this.video.style.display = 'block';
+          this.video.src = this.playList[this.playIndex].mv;
+          this.video.play();
+          this.play.className = 'iconfont icon-bofang button';
+          this.audio.pause();
+        }
 
         // 播放顺序
         this.sort.onclick = () => {
@@ -529,6 +545,7 @@
               if (this.playList[i].mv) {
                 this.video.style.display = 'block';
                 this.video.src = this.playList[i].mv;
+                this.audio.pause();
                 this.video.play();
               }
             }
@@ -586,6 +603,7 @@
       document.getElementById('prev'),
       document.getElementById('next'),
       document.getElementById('translation'),
+      document.getElementById('mv'),
       document.getElementById('sort'),
       document.getElementById('list'),
       document.getElementById('listOverlay'),
