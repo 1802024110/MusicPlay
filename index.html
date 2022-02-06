@@ -148,7 +148,6 @@
       <div class="list_card" style="position: absolute;width: 100%;">
         <div style="top: 00.3rem;">
           <button class="iconfont icon-wangyiyunyinle button list_icon"></button>
-          <button class="iconfont icon-qqmusic button list_icon"></button>
           <button class="iconfont icon-bili button list_icon"></button>
           <span id="music_count"
             style="font-size: 0.05rem;color: rgba(116, 116, 116, 0.863);right: 15px;top: 1rem;position: absolute;">共150首</span>
@@ -517,7 +516,8 @@
             const elDivDivP2 = document.createElement('span');
             elDivDivP2.innerHTML = this.playList[i].author;
             const elDivButton1 = document.createElement('button');
-            elDivButton1.className = this.playList[i].mv ? 'iconfont icon-mv button' : '';
+            elDivButton1.className = this.playList[i].mv ? 'iconfont icon-mv button' : 'button';
+            if (!this.playList[i].mv) elDivButton1.disabled = true
             elDivButton1.onclick = () => {
               if (this.playList[i].mv) {
                 this.video.style.display = 'block';
@@ -532,9 +532,6 @@
                 break;
               case 'bilibili':
                 elDivButton2.className = 'iconfont icon-bili button';
-                break;
-              case 'qq':
-                elDivButton2.className = 'iconfont icon-qqmusic button';
                 break;
               default:
                 elDivButton2.className = ' button';
