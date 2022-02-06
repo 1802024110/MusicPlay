@@ -1,6 +1,7 @@
 # MusicPlay
 # 原生简易音乐播放器v3
-仓库音乐播放器3
+![仓库音乐播放器3.1](https://cdn.jsdelivr.net/gh/1802024110/GitHub_Oss@main/img/仓库音乐播放器3.1.png)
+![仓库音乐播放器3.2](https://cdn.jsdelivr.net/gh/1802024110/GitHub_Oss@main/img/仓库音乐播放器3.2.png)
 * 增加mv按钮
 * 增加播放列表
 * 播放列表事件支持
